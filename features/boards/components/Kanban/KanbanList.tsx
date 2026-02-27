@@ -4,6 +4,8 @@ import { DealView, CustomFieldDefinition, BoardStage } from '@/types';
 import { ActivityStatusIcon } from './ActivityStatusIcon';
 import { getActivityStatus } from '@/features/boards/hooks/useBoardsController';
 import { MoveToStageModal } from '../Modals/MoveToStageModal';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency, CurrencyCode } from '@/lib/utils/currencyUtils';
 
 type QuickAddType = 'CALL' | 'MEETING' | 'EMAIL';
 
@@ -18,6 +20,7 @@ type KanbanListRowProps = {
   onQuickAdd: (dealId: string, type: QuickAddType, dealTitle: string) => void;
   onCloseMenu: () => void;
   onMoveDealToStage?: (dealId: string, newStageId: string) => void;
+  currency: CurrencyCode;
 };
 
 /**
@@ -35,6 +38,7 @@ const KanbanListRow = React.memo(function KanbanListRow({
   onQuickAdd,
   onCloseMenu,
   onMoveDealToStage,
+  currency,
 }: KanbanListRowProps) {
   const [moveToStageOpen, setMoveToStageOpen] = useState(false);
 
@@ -45,16 +49,16 @@ const KanbanListRow = React.memo(function KanbanListRow({
         className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
       >
         <td className="px-6 py-3 text-center">
-        <ActivityStatusIcon
-          status={getActivityStatus(deal)}
-          type={deal.nextActivity?.type}
-          dealId={deal.id}
-          dealTitle={deal.title}
-          isOpen={isMenuOpen}
-          onToggle={(e) => onToggleMenu(e, deal.id)}
-          onQuickAdd={(type) => onQuickAdd(deal.id, type, deal.title)}
-          onRequestClose={onCloseMenu}
-        />
+          <ActivityStatusIcon
+            status={getActivityStatus(deal)}
+            type={deal.nextActivity?.type}
+            dealId={deal.id}
+            dealTitle={deal.title}
+            isOpen={isMenuOpen}
+            onToggle={(e) => onToggleMenu(e, deal.id)}
+            onQuickAdd={(type) => onQuickAdd(deal.id, type, deal.title)}
+            onRequestClose={onCloseMenu}
+          />
         </td>
         <td className="px-6 py-3 font-bold text-slate-900 dark:text-white">{deal.title}</td>
         <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{deal.companyName}</td>
@@ -66,13 +70,12 @@ const KanbanListRow = React.memo(function KanbanListRow({
                 e.stopPropagation();
                 setMoveToStageOpen(true);
               }}
-              className={`text-xs font-bold px-2 py-1 rounded focus-visible-ring ${
-                deal.isWon
+              className={`text-xs font-bold px-2 py-1 rounded focus-visible-ring ${deal.isWon
                   ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300'
                   : deal.isLost
                     ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300'
                     : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+                }`}
               aria-label="Mover estágio"
               title="Mover estágio"
             >
@@ -80,20 +83,19 @@ const KanbanListRow = React.memo(function KanbanListRow({
             </button>
           ) : (
             <span
-              className={`text-xs font-bold px-2 py-1 rounded ${
-                deal.isWon
+              className={`text-xs font-bold px-2 py-1 rounded ${deal.isWon
                   ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300'
                   : deal.isLost
                     ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300'
                     : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-              } `}
+                } `}
             >
               {stageLabel}
             </span>
           )}
         </td>
         <td className="px-6 py-3 font-mono text-slate-700 dark:text-slate-200">
-          ${deal.value.toLocaleString()}
+          {formatCurrency(deal.value, currency)}
         </td>
         <td className="px-6 py-3">
           <div className="flex items-center gap-2">
@@ -174,6 +176,8 @@ export const KanbanList: React.FC<KanbanListProps> = ({
   handleQuickAddActivity,
   onMoveDealToStage,
 }) => {
+  const { currency } = useSettings();
+
   // Performance: evitar `find` por linha (O(N*S)) ao renderizar tabela.
   const stageLabelById = useMemo(() => {
     const map = new Map<string, string>();
@@ -255,6 +259,7 @@ export const KanbanList: React.FC<KanbanListProps> = ({
                 onQuickAdd={handleQuickAdd}
                 onCloseMenu={handleCloseMenu}
                 onMoveDealToStage={onMoveDealToStage}
+                currency={currency}
               />
             ))}
           </tbody>

@@ -9,6 +9,8 @@ import { PipelineAlertsModal } from './components/PipelineAlertsModal';
 import { useDashboardMetrics, PeriodFilter, COMPARISON_LABELS } from './hooks/useDashboardMetrics';
 import { PeriodFilterSelect } from '@/components/filters/PeriodFilterSelect';
 import { LazyFunnelChart, ChartWrapper } from '@/components/charts';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 
 /**
@@ -31,6 +33,7 @@ const DashboardPage: React.FC = () => {
   const router = useRouter();
   const { activities, lifecycleStages, contacts, boards } = useCRM();
   const { addToast } = useToast();
+  const { currency } = useSettings();
   const [period, setPeriod] = useState<PeriodFilter>('this_month');
   const [showPipelineAlerts, setShowPipelineAlerts] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string>('');
@@ -142,7 +145,7 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         <StatCard
           title="Pipeline Total"
-          value={`$${pipelineValue.toLocaleString()}`}
+          value={formatCurrency(pipelineValue, currency)}
           subtext={pipelineChangeInfo.text}
           subtextPositive={pipelineChangeInfo.isPositive}
           icon={DollarSign}
@@ -172,7 +175,7 @@ const DashboardPage: React.FC = () => {
         />
         <StatCard
           title="Receita (Ganha)"
-          value={`$${wonRevenue.toLocaleString()}`}
+          value={formatCurrency(wonRevenue, currency)}
           subtext={revenueChangeInfo.text}
           subtextPositive={revenueChangeInfo.isPositive}
           icon={TrendingUp}
@@ -254,7 +257,7 @@ const DashboardPage: React.FC = () => {
               Sem mudança de estágio há +10 dias.
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              ${stagnantDealsValue.toLocaleString()} em risco
+              {formatCurrency(stagnantDealsValue, currency)} em risco
             </p>
           </div>
 
@@ -264,7 +267,7 @@ const DashboardPage: React.FC = () => {
             </h3>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                ${(avgLTV / 1000).toFixed(1)}k
+                {currency === 'BRL' ? 'R$' : '$'}{(avgLTV / 1000).toFixed(1)}k
               </span>
               <span className="text-xs text-green-500 font-bold mb-1">Médio</span>
             </div>

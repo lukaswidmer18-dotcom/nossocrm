@@ -8,6 +8,7 @@ import { LazyRevenueTrendChart, ChartWrapper } from '@/components/charts';
 import { generateReportPDF } from './utils/generateReportPDF';
 import { useCRM } from '@/context/CRMContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/settings/SettingsContext';
 
 /**
  * Componente React `ReportsPage`.
@@ -17,6 +18,7 @@ const ReportsPage: React.FC = () => {
   const router = useRouter();
   const { boards } = useCRM();
   const { profile } = useAuth();
+  const { currency } = useSettings();
   const [period, setPeriod] = useState<PeriodFilter>('this_month');
   const [selectedBoardId, setSelectedBoardId] = useState<string>('');
 
@@ -91,9 +93,10 @@ const ReportsPage: React.FC = () => {
   const formatGoalValue = useCallback((value: number) => {
     switch (goalType) {
       case 'currency':
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-        return `$${value.toLocaleString()}`;
+        const symbol = currency === 'BRL' ? 'R$' : '$';
+        if (value >= 1000000) return `${symbol}${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000) return `${symbol}${(value / 1000).toFixed(0)}k`;
+        return `${symbol}${value.toLocaleString(currency === 'BRL' ? 'pt-BR' : 'en-US')}`;
       case 'number':
         return value.toFixed(0);
       case 'percentage':
@@ -101,7 +104,7 @@ const ReportsPage: React.FC = () => {
       default:
         return value.toLocaleString();
     }
-  }, [goalType]);
+  }, [goalType, currency]);
 
   // Calcular Performance por Vendedor (Leaderboard)
   const leaderboard = React.useMemo(() => {
@@ -131,10 +134,11 @@ const ReportsPage: React.FC = () => {
 
   // Formatador de moeda
   const formatCurrency = useCallback((value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-    return `$${value.toLocaleString()}`;
-  }, []);
+    const symbol = currency === 'BRL' ? 'R$' : '$';
+    if (value >= 1000000) return `${symbol}${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${symbol}${(value / 1000).toFixed(0)}k`;
+    return `${symbol}${value.toLocaleString(currency === 'BRL' ? 'pt-BR' : 'en-US')}`;
+  }, [currency]);
 
   const generatedBy = useMemo(() => {
     if (profile?.first_name && profile?.last_name) return `${profile.first_name} ${profile.last_name}`;

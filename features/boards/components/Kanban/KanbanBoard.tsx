@@ -5,6 +5,8 @@ import { isDealRotting, getActivityStatus } from '@/features/boards/hooks/useBoa
 import { MoveToStageModal } from '../Modals/MoveToStageModal';
 
 import { useCRM } from '@/context/CRMContext';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 /**
  * UI: Drop highlight should follow the stage color.
@@ -114,8 +116,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onMoveDealToStage,
 }) => {
   const { lifecycleStages } = useCRM();
+  const { currency } = useSettings();
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
-  
+
   // State for move-to-stage modal (keyboard accessibility alternative to drag-and-drop)
   const [moveToStageModal, setMoveToStageModal] = useState<{
     isOpen: boolean;
@@ -245,10 +248,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 )}
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium text-right">
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium text-right mt-2">
                 Total:{' '}
                 <span className="text-slate-900 dark:text-white font-mono">
-                  ${stageValue.toLocaleString()}
+                  {formatCurrency(stageValue, currency)}
                 </span>
               </div>
             </div>
@@ -292,7 +295,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           </div>
         );
       })}
-      
+
       {/* Keyboard-accessible modal for moving deals between stages */}
       {moveToStageModal && (
         <MoveToStageModal

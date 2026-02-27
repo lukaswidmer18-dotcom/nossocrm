@@ -4,6 +4,8 @@ import { DealView } from '@/types';
 import { Building2, Hourglass, Trophy, XCircle } from 'lucide-react';
 import { ActivityStatusIcon } from './ActivityStatusIcon';
 import { priorityAriaLabelPtBr } from '@/lib/utils/priority';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 interface DealCardProps {
   deal: DealView;
@@ -58,6 +60,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
   setLastMouseDownDealId,
   onMoveToStage,
 }) => {
+  const { currency } = useSettings();
   const [localDragging, setLocalDragging] = useState(false);
   const isClosed = isDealClosed(deal);
 
@@ -140,7 +143,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
     // Main content
     parts.push(deal.title);
     if (deal.companyName) parts.push(deal.companyName);
-    parts.push(`$${deal.value.toLocaleString()}`);
+    parts.push(formatCurrency(deal.value, currency));
 
     // Additional context
     const priority = getPriorityLabel(deal.priority);
@@ -259,7 +262,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             )
           )}
           <span className="text-sm font-bold text-slate-700 dark:text-slate-200 font-mono">
-            ${deal.value.toLocaleString()}
+            {formatCurrency(deal.value, currency)}
           </span>
         </div>
 

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { CheckCircle2, ChevronDown, ChevronRight, MessageSquareText, Phone, Sparkles, Target } from 'lucide-react';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 type TimelineItem = {
   id: string;
@@ -44,18 +46,6 @@ const mock = {
   ] as TimelineItem[],
 };
 
-function formatCurrencyBRL(value: number): string {
-  try {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `R$ ${value.toFixed(2)}`;
-  }
-}
-
 function Badge({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'neutral' | 'success' | 'warning' }) {
   const cls =
     tone === 'success'
@@ -97,6 +87,7 @@ function TimelineRow({ item }: { item: TimelineItem }) {
  * @returns {Element} Retorna um valor do tipo `Element`.
  */
 export default function DealJobsMockClient() {
+  const { currency } = useSettings();
   const [showSystemEvents, setShowSystemEvents] = React.useState(false);
 
   const humanItems = React.useMemo(() => mock.timeline.filter((t) => t.kind === 'human'), []);
@@ -121,7 +112,7 @@ export default function DealJobsMockClient() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge tone="success">{formatCurrencyBRL(mock.deal.valueBRL)}</Badge>
+            <Badge tone="success">{formatCurrency(mock.deal.valueBRL, currency)}</Badge>
           </div>
         </header>
 

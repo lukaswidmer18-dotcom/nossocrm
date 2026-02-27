@@ -22,6 +22,7 @@ const UpdateOrgAISettingsSchema = z
     aiGoogleKey: z.string().optional(),
     aiOpenaiKey: z.string().optional(),
     aiAnthropicKey: z.string().optional(),
+    currency: z.enum(['BRL', 'USD']).optional(),
   })
   .strict();
 
@@ -52,7 +53,7 @@ export async function GET() {
 
   const { data: orgSettings, error: orgError } = await supabase
     .from('organization_settings')
-    .select('ai_enabled, ai_provider, ai_model, ai_google_key, ai_openai_key, ai_anthropic_key')
+    .select('ai_enabled, ai_provider, ai_model, ai_google_key, ai_openai_key, ai_anthropic_key, currency')
     .eq('organization_id', profile.organization_id)
     .maybeSingle();
 
@@ -74,6 +75,7 @@ export async function GET() {
       aiHasGoogleKey: Boolean(orgSettings?.ai_google_key),
       aiHasOpenaiKey: Boolean(orgSettings?.ai_openai_key),
       aiHasAnthropicKey: Boolean(orgSettings?.ai_anthropic_key),
+      currency: orgSettings?.currency || 'BRL',
     });
   }
 
@@ -87,6 +89,7 @@ export async function GET() {
     aiHasGoogleKey: Boolean(orgSettings?.ai_google_key),
     aiHasOpenaiKey: Boolean(orgSettings?.ai_openai_key),
     aiHasAnthropicKey: Boolean(orgSettings?.ai_anthropic_key),
+    currency: orgSettings?.currency || 'BRL',
   });
 }
 
@@ -158,6 +161,8 @@ export async function POST(req: Request) {
 
   const anthropicKey = normalizeKey(updates.aiAnthropicKey);
   if (anthropicKey !== undefined) dbUpdates.ai_anthropic_key = anthropicKey;
+
+  if (updates.currency !== undefined) dbUpdates.currency = updates.currency;
 
   const { error: upsertError } = await supabase
     .from('organization_settings')

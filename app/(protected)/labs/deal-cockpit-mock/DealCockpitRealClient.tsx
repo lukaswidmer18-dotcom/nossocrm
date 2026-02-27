@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCRM } from '@/context/CRMContext';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { normalizePhoneE164 } from '@/lib/phone';
+import { useSettings } from '@/context/settings/SettingsContext';
 
 import { useAIDealAnalysis, deriveHealthFromProbability } from '@/features/inbox/hooks/useAIDealAnalysis';
 import { useDealNotes } from '@/features/inbox/hooks/useDealNotes';
@@ -39,6 +40,8 @@ import type { QuickScript, ScriptCategory } from '@/lib/supabase/quickScripts';
 import type { Activity, Board, BoardStage, Contact, DealView } from '@/types';
 
 type Tab = 'chat' | 'notas' | 'scripts' | 'arquivos';
+
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 type StageTone = 'blue' | 'violet' | 'amber' | 'green' | 'slate';
 
@@ -311,18 +314,6 @@ function formatAtISO(iso: string): string {
   return `${dd} · ${tt}`;
 }
 
-function formatCurrencyBRL(value: number): string {
-  try {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `R$ ${value.toFixed(2)}`;
-  }
-}
-
 function stageToneFromBoardColor(color?: string): StageTone {
   const c = (color ?? '').toLowerCase();
   if (c.includes('emerald') || c.includes('green')) return 'green';
@@ -573,6 +564,8 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
     updateDeal,
   } = useCRM();
 
+  const { currency } = useSettings();
+
   const [tab, setTab] = useState<Tab>('chat');
   const [query, setQuery] = useState('');
   const [kindFilter, setKindFilter] = useState<'all' | TimelineItem['kind']>('all');
@@ -650,7 +643,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
   const templateVariables = useMemo(() => {
     const nome = selectedContact?.name?.split(' ')[0]?.trim() || 'Cliente';
     const empresa = selectedDeal?.clientCompanyName?.trim() || selectedDeal?.companyName?.trim() || 'Empresa';
-    const valor = typeof selectedDeal?.value === 'number' ? formatCurrencyBRL(selectedDeal.value) : '';
+    const valor = typeof selectedDeal?.value === 'number' ? formatCurrency(selectedDeal.value, currency) : '';
     const produto =
       selectedDeal?.items?.[0]?.name?.trim() ||
       selectedDeal?.title?.trim() ||
@@ -731,33 +724,33 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
 
     const boardInfo = selectedBoard
       ? {
-          id: selectedBoard.id,
-          name: selectedBoard.name,
-          description: selectedBoard.description,
-          wonStageId: selectedBoard.wonStageId,
-          lostStageId: selectedBoard.lostStageId,
-          stages: (selectedBoard.stages ?? []).map((s) => ({ id: s.id, label: s.label, color: s.color })),
-        }
+        id: selectedBoard.id,
+        name: selectedBoard.name,
+        description: selectedBoard.description,
+        wonStageId: selectedBoard.wonStageId,
+        lostStageId: selectedBoard.lostStageId,
+        stages: (selectedBoard.stages ?? []).map((s) => ({ id: s.id, label: s.label, color: s.color })),
+      }
       : undefined;
 
     const contactInfo = selectedContact
       ? {
-          id: selectedContact.id,
-          name: selectedContact.name,
-          role: selectedContact.role,
-          email: selectedContact.email,
-          phone: selectedContact.phone,
-          avatar: selectedContact.avatar,
-          status: selectedContact.status,
-          stage: selectedContact.stage,
-          source: selectedContact.source,
-          notes: selectedContact.notes,
-          lastInteraction: selectedContact.lastInteraction,
-          birthDate: selectedContact.birthDate,
-          lastPurchaseDate: selectedContact.lastPurchaseDate,
-          totalValue: selectedContact.totalValue,
-          clientCompanyId: selectedContact.clientCompanyId,
-        }
+        id: selectedContact.id,
+        name: selectedContact.name,
+        role: selectedContact.role,
+        email: selectedContact.email,
+        phone: selectedContact.phone,
+        avatar: selectedContact.avatar,
+        status: selectedContact.status,
+        stage: selectedContact.stage,
+        source: selectedContact.source,
+        notes: selectedContact.notes,
+        lastInteraction: selectedContact.lastInteraction,
+        birthDate: selectedContact.birthDate,
+        lastPurchaseDate: selectedContact.lastPurchaseDate,
+        totalValue: selectedContact.totalValue,
+        clientCompanyId: selectedContact.clientCompanyId,
+      }
       : undefined;
 
     const dealInfo = {
@@ -951,11 +944,11 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
 
   const openMessageComposer = useCallback(
     (channel: MessageChannel, prefill?: { subject?: string; message?: string }, ctx?: MessageLogContext | null) => {
-    setMessageChannel(channel);
-    setMessagePrefill(prefill ?? null);
-    setMessageLogContext(ctx ?? null);
-    setIsMessageModalOpen(true);
-  }, []
+      setMessageChannel(channel);
+      setMessagePrefill(prefill ?? null);
+      setMessageLogContext(ctx ?? null);
+      setIsMessageModalOpen(true);
+    }, []
   );
 
   const openScheduleModal = useCallback((initial?: { type?: ScheduleType; title?: string; description?: string }) => {
@@ -1333,7 +1326,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
             </div>
 
             <div className="shrink-0 text-right">
-              <div className="text-sm font-semibold text-emerald-300">{formatCurrencyBRL(deal.value ?? 0)}</div>
+              <div className="text-sm font-semibold text-emerald-300">{formatCurrency(deal.value ?? 0, currency)}</div>
               <div className="mt-0.5 text-[11px] text-slate-500">
                 Etapa: <span className="font-semibold text-slate-300">{activeStage?.label ?? '—'}</span>
               </div>
@@ -1538,7 +1531,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-slate-500">Email</span>
                       <span className="flex items-center gap-2 min-w-0">
-                          <span className="truncate text-slate-200">{contact?.email ?? ''}</span>
+                        <span className="truncate text-slate-200">{contact?.email ?? ''}</span>
                         <button
                           type="button"
                           className="shrink-0 rounded-lg border border-white/10 bg-white/2 p-1.5 text-slate-300 hover:bg-white/5"
@@ -1586,7 +1579,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                     <div className="rounded-lg border border-white/10 bg-white/2 p-2">
                       <div className="text-slate-500">Valor</div>
-                      <div className="mt-0.5 font-semibold text-slate-100">{formatCurrencyBRL(deal.value ?? 0)}</div>
+                      <div className="mt-0.5 font-semibold text-slate-100">{formatCurrency(deal.value ?? 0, currency)}</div>
                     </div>
                     <div className="rounded-lg border border-white/10 bg-white/2 p-2">
                       <div className="text-slate-500">Probabilidade</div>

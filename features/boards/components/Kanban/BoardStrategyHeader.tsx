@@ -12,9 +12,8 @@ import {
 } from 'lucide-react';
 import { Board } from '@/types';
 import { useCRM } from '@/context/CRMContext';
-
-// Performance: reuse formatter instances.
-const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 interface BoardStrategyHeaderProps {
   board: Board;
@@ -28,6 +27,7 @@ interface BoardStrategyHeaderProps {
  */
 export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board }) => {
   const { updateBoard, setIsGlobalAIOpen, boards, deals } = useCRM();
+  const { currency } = useSettings();
   const [isEditing, setIsEditing] = useState(false);
   const [editedBoard, setEditedBoard] = useState(board);
 
@@ -52,7 +52,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
     if (type === 'currency') {
       return {
         value: totalValue,
-        display: BRL_CURRENCY_FORMATTER.format(totalValue),
+        display: formatCurrency(totalValue, currency),
       };
     }
 

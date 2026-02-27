@@ -22,6 +22,8 @@ import {
   StickyNote,
   X,
 } from 'lucide-react';
+import { useSettings } from '@/context/settings/SettingsContext';
+import { formatCurrency } from '@/lib/utils/currencyUtils';
 
 type Stage = { id: string; label: string; tone: 'blue' | 'violet' | 'amber' | 'green' | 'slate' };
 
@@ -120,18 +122,6 @@ function uid(prefix = 'id'): string {
   return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
 }
 
-function formatCurrencyBRL(value: number): string {
-  try {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `R$ ${value.toFixed(2)}`;
-  }
-}
-
 function toneToBg(tone: Stage['tone']): string {
   switch (tone) {
     case 'blue':
@@ -208,6 +198,7 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
  * @returns {Element} Retorna um valor do tipo `Element`.
  */
 export default function DealCockpitMockClient() {
+  const { currency } = useSettings();
   const [tab, setTab] = React.useState<Tab>('chat');
   const [query, setQuery] = React.useState('');
   const [leftDataTab, setLeftDataTab] = React.useState<LeftDataTab>('contato');
@@ -440,7 +431,7 @@ export default function DealCockpitMockClient() {
             </div>
 
             <div className="shrink-0 text-right">
-              <div className="text-sm font-semibold text-emerald-300">{formatCurrencyBRL(mock.deal.valueBRL)}</div>
+              <div className="text-sm font-semibold text-emerald-300">{formatCurrency(mock.deal.valueBRL, currency)}</div>
               <div className="mt-0.5 text-[11px] text-slate-500">
                 Etapa: <span className="font-semibold text-slate-300">{activeStage.label}</span>
               </div>
@@ -492,7 +483,7 @@ export default function DealCockpitMockClient() {
               <div className="mt-2 text-[11px] text-slate-500">Indicador sintético (mock) — objetivo é te dar leitura rápida.</div>
             </Panel>
 
-            <Panel title="Próxima ação" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" /> } className="shrink-0">
+            <Panel title="Próxima ação" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />} className="shrink-0">
               <div className="text-sm font-semibold text-slate-100">{mock.nextAction.title}</div>
               <div className="mt-1 text-xs text-slate-400">{mock.nextAction.description}</div>
               <div className="mt-2 text-[11px] text-slate-500">
@@ -695,7 +686,7 @@ export default function DealCockpitMockClient() {
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <div className="rounded-lg border border-white/10 bg-white/2 p-2">
                         <div className="text-slate-500">Valor</div>
-                        <div className="mt-0.5 font-semibold text-slate-100">{formatCurrencyBRL(mock.deal.valueBRL)}</div>
+                        <div className="mt-0.5 font-semibold text-slate-100">{formatCurrency(mock.deal.valueBRL, currency)}</div>
                       </div>
                       <div className="rounded-lg border border-white/10 bg-white/2 p-2">
                         <div className="text-slate-500">Prioridade</div>

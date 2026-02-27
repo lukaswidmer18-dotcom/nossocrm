@@ -13,6 +13,7 @@ import { LifecycleStage, Product, CustomFieldDefinition, Lead } from '@/types';
 import { settingsService, lifecycleStagesService, productsService } from '@/lib/supabase';
 import { useAuth } from '../AuthContext';
 import { AI_DEFAULT_MODELS, AI_DEFAULT_PROVIDER } from '@/lib/ai/defaults';
+import type { CurrencyCode } from '@/lib/utils/currencyUtils';
 
 const DEFAULT_LIFECYCLE_STAGES: LifecycleStage[] = [
   { id: 'LEAD', name: 'Lead', color: 'bg-blue-500', order: 0, isDefault: true },
@@ -87,6 +88,10 @@ interface SettingsContextType {
   // UI State
   isGlobalAIOpen: boolean;
   setIsGlobalAIOpen: (isOpen: boolean) => void;
+
+  // Currency Preferences
+  currency: CurrencyCode;
+  setCurrency: (currency: CurrencyCode) => Promise<void>;
 
   // Legacy Leads (deprecated - kept for compatibility)
   leads: Lead[];
@@ -167,6 +172,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [aiProvider, aiHasGoogleKey, aiHasOpenaiKey, aiHasAnthropicKey, aiGoogleKey, aiOpenaiKey, aiAnthropicKey]);
 
+  // Currency State
+  const [currency, setCurrencyState] = useState<CurrencyCode>('BRL');
+
   // UI State
   const [isGlobalAIOpen, setIsGlobalAIOpen] = useState(false);
 
@@ -223,6 +231,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
               aiHasGoogleKey?: boolean;
               aiHasOpenaiKey?: boolean;
               aiHasAnthropicKey?: boolean;
+              currency?: CurrencyCode;
             };
 
             setAiOrgEnabledState(typeof aiData.aiEnabled === 'boolean' ? aiData.aiEnabled : true);
@@ -234,6 +243,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
             setAiHasGoogleKey(Boolean(aiData.aiHasGoogleKey));
             setAiHasOpenaiKey(Boolean(aiData.aiHasOpenaiKey));
             setAiHasAnthropicKey(Boolean(aiData.aiHasAnthropicKey));
+            if (aiData.currency) setCurrencyState(aiData.currency);
           } else {
             const body = await aiRes.json().catch(() => null);
             const message = body?.error || `Falha ao carregar config de IA (HTTP ${aiRes.status})`;
@@ -496,6 +506,14 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     [updateSettings]
   );
 
+  const setCurrency = useCallback(
+    async (newCurrency: CurrencyCode) => {
+      await updateOrgAISettings({ currency: newCurrency });
+      setCurrencyState(newCurrency);
+    },
+    [updateOrgAISettings]
+  );
+
   // Custom Fields (local state for now)
   const addCustomField = useCallback((field: Omit<CustomFieldDefinition, 'id'>) => {
     const newField = { ...field, id: crypto.randomUUID() };
@@ -574,6 +592,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       setAiAnthropicCaching,
       isGlobalAIOpen,
       setIsGlobalAIOpen,
+      currency,
+      setCurrency,
       leads,
       setLeads,
       addLead,
@@ -619,6 +639,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       aiAnthropicCaching,
       setAiAnthropicCaching,
       isGlobalAIOpen,
+      currency,
       leads,
       setLeads,
       addLead,

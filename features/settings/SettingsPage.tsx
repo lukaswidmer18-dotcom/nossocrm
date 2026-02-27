@@ -12,7 +12,9 @@ import { AICenterSettings } from './AICenterSettings';
 
 import { UsersPage } from './UsersPage';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/settings/SettingsContext';
 import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package } from 'lucide-react';
+import type { CurrencyCode } from '@/lib/utils/currencyUtils';
 
 type SettingsTab = 'general' | 'products' | 'integrations' | 'ai' | 'data' | 'users';
 
@@ -23,6 +25,7 @@ interface GeneralSettingsProps {
 
 const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
   const controller = useSettingsController();
+  const { currency, setCurrency } = useSettings();
 
   // Scroll to hash element (e.g., #ai-config)
   useEffect(() => {
@@ -63,6 +66,28 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
           </select>
         </div>
       </div>
+
+      {/* Currency Settings */}
+      {isAdmin && (
+        <div className="mb-12">
+          <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Moeda do Sistema</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Escolha qual moeda será utilizada para exibir os valores nos catálogos e negócios.
+            </p>
+            <select
+              aria-label="Selecionar Moeda"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+              className="w-full max-w-xs px-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-slate-900 dark:text-white transition-all"
+            >
+              <option value="BRL">Real (R$)</option>
+              <option value="USD">Dólar Americano ($)</option>
+            </select>
+          </div>
+        </div>
+      )}
+
 
       {isAdmin && (
         <>
@@ -109,8 +134,8 @@ const IntegrationsSettings: React.FC = () => {
 
   useEffect(() => {
     const syncFromHash = () => {
-    const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
-    if (h === 'webhooks' || h === 'api' || h === 'mcp') setSubTab(h as IntegrationsSubTab);
+      const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
+      if (h === 'webhooks' || h === 'api' || h === 'mcp') setSubTab(h as IntegrationsSubTab);
     };
 
     syncFromHash();
@@ -144,11 +169,10 @@ const IntegrationsSettings: React.FC = () => {
               key={t.id}
               type="button"
               onClick={() => setSubTabAndHash(t.id)}
-              className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${
-                active
+              className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${active
                   ? 'border-primary-500/50 bg-primary-500/10 text-primary-700 dark:text-primary-300'
                   : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10'
-              }`}
+                }`}
             >
               {t.label}
             </button>
